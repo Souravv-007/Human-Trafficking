@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 270 50% 6%;
+    --foreground: 0 0% 98%;
+    --card: 270 40% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 270 40% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 30% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 270 20% 12%;
+    --muted-foreground: 270 10% 60%;
+    --accent: 25 90% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 270 30% 15%;
+    --input: 270 30% 15%;
+    --ring: 270 70% 60%;
+    --radius: 0.75rem;
+
+    --chart-1: 270 70% 60%;
+    --chart-2: 25 90% 55%;
+    --chart-3: 0 70% 55%;
+    --chart-4: 280 60% 50%;
+    --chart-5: 30 80% 50%;
+
+    --neon-purple: 270 70% 60%;
+    --neon-orange: 25 90% 55%;
+    --neon-red: 0 70% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+  }
+
+  .neon-glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3),
+                0 0 40px rgba(147, 51, 234, 0.15),
+                inset 0 0 20px rgba(147, 51, 234, 0.05);
+  }
+
+  .neon-glow-orange {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3),
+                0 0 40px rgba(249, 115, 22, 0.15),
+                inset 0 0 20px rgba(249, 115, 22, 0.05);
+  }
+
+  .neon-glow-red {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3),
+                0 0 40px rgba(239, 68, 68, 0.15),
+                inset 0 0 20px rgba(239, 68, 68, 0.05);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(249, 115, 22, 0.8) 50%, rgba(239, 68, 68, 0.8) 100%);
+  }
+
+  .gradient-purple-orange {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.5) 0%, rgba(249, 115, 22, 0.5) 100%);
+  }
+
+  .gradient-orange-red {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.6) 0%, rgba(239, 68, 68, 0.6) 100%);
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #9333ea, #f97316, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(135deg, rgba(147, 51, 234, 0.5), rgba(249, 115, 22, 0.5), rgba(239, 68, 68, 0.5)) border-box;
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .typing-cursor::after {
+    content: '|';
+    animation: blink 1s infinite;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3), 0 0 40px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.5), 0 0 60px rgba(239, 68, 68, 0.3);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-orange)));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(270 70% 65%), hsl(25 90% 60%));
+}
