@@ -61,24 +61,35 @@ export default function SocialMediaGenerator() {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const generateImage = async (imageIdea: string) => {
-    setImageLoading(true);
-    setImageError(false);
-    setGeneratedImage(null);
+const generateImage = async (imageIdea: string) => {
+  setImageLoading(true);
+  setImageError(false);
+  setGeneratedImage(null);
 
-    try {
-      const encodedPrompt = encodeURIComponent(
-        `${imageIdea}. Style: professional awareness campaign, hopeful, empowering, clean background, no text, no words, social media ready`
-      );
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1080&height=1080&nologo=true&seed=${Date.now()}`;
-      setGeneratedImage(imageUrl);
-    } catch {
+  try {
+  
+    const response = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_idea: imageIdea }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setGeneratedImage(data.imageData); 
+      toast.success("Image generated!");
+    } else {
       setImageError(true);
-      toast.error("Failed to generate image");
-    } finally {
-      setImageLoading(false);
+      toast.error("Image generation failed");
     }
-  };
+  } catch {
+    setImageError(true);
+    toast.error("Failed to generate image");
+  } finally {
+    setImageLoading(false);
+  }
+};
 
   const handleGenerate = async () => {
     setIsGenerating(true);
