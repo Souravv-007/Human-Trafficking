@@ -67,10 +67,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenRouter API key not configured' },
         { status: 500 }
       );
     }
@@ -114,14 +114,16 @@ IMAGE IDEA: [Brief description of a suitable visual]
 
 Generate the post now.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+        'X-Title': process.env.NEXT_PUBLIC_SITE_NAME || 'SafeRouteHub',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'openai/gpt-3.5-turbo', // Change this to any OpenRouter-supported model
         messages: [
           {
             role: 'system',
@@ -139,9 +141,9 @@ Generate the post now.`;
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
+      console.error('OpenRouter API error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to generate content from OpenAI API' },
+        { error: 'Failed to generate content from OpenRouter API' },
         { status: 500 }
       );
     }
