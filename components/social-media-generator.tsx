@@ -57,10 +57,34 @@ export default function SocialMediaGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPost, setGeneratedPost] = useState<GeneratedPost | null>(null);
   const [copied, setCopied] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const generateImage = async (imageIdea: string) => {
+    setImageLoading(true);
+    setImageError(false);
+    setGeneratedImage(null);
+
+    try {
+      const encodedPrompt = encodeURIComponent(
+        `${imageIdea}. Style: professional awareness campaign, hopeful, empowering, clean background, no text, no words, social media ready`
+      );
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1080&height=1080&nologo=true&seed=${Date.now()}`;
+      setGeneratedImage(imageUrl);
+    } catch {
+      setImageError(true);
+      toast.error("Failed to generate image");
+    } finally {
+      setImageLoading(false);
+    }
+  };
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGeneratedPost(null);
+    setGeneratedImage(null);
+    setImageError(false);
 
     try {
       const response = await fetch("/api/generate-post", {
@@ -74,6 +98,8 @@ export default function SocialMediaGenerator() {
       if (data.success) {
         setGeneratedPost(data.post);
         toast.success("Post generated successfully!");
+        // Auto generate image right after post is generated
+        await generateImage(data.post.image_idea);
       } else {
         toast.error(data.error || "Failed to generate post");
       }
@@ -86,12 +112,28 @@ export default function SocialMediaGenerator() {
 
   const handleCopy = () => {
     if (!generatedPost) return;
-
     const text = `${generatedPost.hook}\n\n${generatedPost.caption}\n\n${generatedPost.cta}\n\n${generatedPost.hashtags.map(h => `#${h}`).join(" ")}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("Copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadImage = async () => {
+    if (!generatedImage) return;
+    try {
+      const response = await fetch(generatedImage);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `awareness-post-${Date.now()}.jpg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Image downloaded!");
+    } catch {
+      toast.error("Failed to download image");
+    }
   };
 
   return (
@@ -221,7 +263,11 @@ export default function SocialMediaGenerator() {
                 <button className="p-2 rounded-lg bg-background/50 hover:bg-purple-500/20 border border-border hover:border-purple-500/50 transition-all">
                   <Save className="w-4 h-4 text-muted-foreground" />
                 </button>
-                <button className="p-2 rounded-lg bg-background/50 hover:bg-purple-500/20 border border-border hover:border-purple-500/50 transition-all">
+                <button
+                  onClick={handleDownloadImage}
+                  disabled={!generatedImage}
+                  className="p-2 rounded-lg bg-background/50 hover:bg-purple-500/20 border border-border hover:border-purple-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
                   <Download className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <button
@@ -266,13 +312,65 @@ export default function SocialMediaGenerator() {
                 </div>
               </div>
 
+              {/* IMAGE SECTION - replaces old text-only "Suggested Image Idea" */}
               <div>
-                <p className="text-xs text-cyan-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-2">
+                <p className="text-xs text-cyan-400 font-medium uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Image className="w-3 h-3" />
-                  Suggested Image Idea
+                  Generated Image
                 </p>
-                <div className="glass rounded-lg p-3 border border-cyan-500/20">
-                  <p className="text-sm text-muted-foreground italic">{generatedPost.image_idea}</p>
+
+                {/* Image idea text */}
+                <p className="text-xs text-muted-foreground italic mb-3">{generatedPost.image_idea}</p>
+
+                {/* Image display area */}
+                <div className="relative rounded-xl overflow-hidden border border-cyan-500/20 bg-background/30 min-h-[200px] flex items-center justify-center">
+                  {imageLoading && (
+                    <div className="flex flex-col items-center gap-3 p-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+                      <p className="text-sm text-muted-foreground">Generating image...</p>
+                      <p className="text-xs text-muted-foreground/60">This may take 10–20 seconds</p>
+                    </div>
+                  )}
+
+                  {!imageLoading && imageError && (
+                    <div className="flex flex-col items-center gap-3 p-8">
+                      <Image className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Image generation failed</p>
+                      <button
+                        onClick={() => generateImage(generatedPost.image_idea)}
+                        className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  )}
+
+                  {!imageLoading && generatedImage && !imageError && (
+                    <div className="w-full">
+                      <img
+                        src={generatedImage}
+                        alt="AI generated awareness campaign visual"
+                        className="w-full rounded-xl object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                      <div className="absolute bottom-2 right-2 flex gap-2">
+                        <button
+                          onClick={() => generateImage(generatedPost.image_idea)}
+                          className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 transition-all"
+                          title="Regenerate image"
+                        >
+                          <RefreshCw className="w-3 h-3 text-white" />
+                        </button>
+                        <button
+                          onClick={handleDownloadImage}
+                          className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 transition-all"
+                          title="Download image"
+                        >
+                          <Download className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
