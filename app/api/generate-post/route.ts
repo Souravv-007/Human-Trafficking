@@ -67,10 +67,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Gemini API key not configured' },
+        { error: 'OpenAI API key not configured' },
         { status: 500 }
       );
     }
@@ -114,32 +114,40 @@ IMAGE IDEA: [Brief description of a suitable visual]
 
 Generate the post now.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert in trauma-informed, survivor-centered anti-trafficking awareness communication.'
           },
-        }),
-      }
-    );
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 1024,
+        temperature: 0.7,
+      }),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Gemini API error:', errorData);
+      console.error('OpenAI API error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to generate content from Gemini API' },
+        { error: 'Failed to generate content from OpenAI API' },
         { status: 500 }
       );
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const generatedText = data.choices?.[0]?.message?.content ?? '';
 
     if (!generatedText) {
       return NextResponse.json(
