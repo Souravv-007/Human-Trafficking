@@ -56,6 +56,16 @@ function parseGeneratedContent(text: string): GeneratedContent {
   return result;
 }
 
+function buildFallbackGeneratedContent(platform: string, tone: string, topic: string): GeneratedContent {
+  return {
+    hook: `This ${platform.toLowerCase()} post opens the conversation about ${topic.toLowerCase()}.`,
+    caption: `A ${tone.toLowerCase()} reminder: awareness starts with recognizing the signs, supporting survivors, and sharing trusted resources. Keep the message centered on dignity, prevention, and action.`,
+    cta: 'Share this post to help others stay informed and alert.',
+    hashtags: ['EndHumanTrafficking', 'Awareness', 'SurvivorSupport', 'CommunityAction', 'KnowTheSigns'],
+    image_idea: 'A clean awareness graphic with supportive hands, hotline details, and a hopeful background.'
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { platform, tone, topic, language = 'English' } = await request.json();
@@ -69,10 +79,12 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        post: buildFallbackGeneratedContent(platform, tone, topic),
+        language,
+        note: 'OPENAI_API_KEY is not configured, so a local fallback response was returned.'
+      });
     }
 
     const platformGuides: Record<string, string> = {
