@@ -13,6 +13,7 @@ import {
   Hash,
   Image,
   Share2,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -58,43 +59,46 @@ export default function SocialMediaGenerator() {
   const [generatedPost, setGeneratedPost] = useState<GeneratedPost | null>(null);
   const [copied, setCopied] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [canvaUrl, setCanvaUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-const generateImage = async (imageIdea: string) => {
-  setImageLoading(true);
-  setImageError(false);
-  setGeneratedImage(null);
+  const generateImage = async (imageIdea: string) => {
+    setImageLoading(true);
+    setImageError(false);
+    setGeneratedImage(null);
+    setCanvaUrl(null);
 
-  try {
-  
-    const response = await fetch('/api/generate-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_idea: imageIdea }),
-    });
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_idea: imageIdea }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (data.success) {
-      setGeneratedImage(data.imageData); 
-      toast.success("Image generated!");
-    } else {
+      if (data.success) {
+        setGeneratedImage(data.imageUrl);
+        setCanvaUrl(data.canvaUrl);
+        toast.success("Image ready!");
+      } else {
+        setImageError(true);
+        toast.error("Image generation failed");
+      }
+    } catch {
       setImageError(true);
-      toast.error("Image generation failed");
+      toast.error("Failed to generate image");
+    } finally {
+      setImageLoading(false);
     }
-  } catch {
-    setImageError(true);
-    toast.error("Failed to generate image");
-  } finally {
-    setImageLoading(false);
-  }
-};
+  };
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGeneratedPost(null);
     setGeneratedImage(null);
+    setCanvaUrl(null);
     setImageError(false);
 
     try {
@@ -109,7 +113,6 @@ const generateImage = async (imageIdea: string) => {
       if (data.success) {
         setGeneratedPost(data.post);
         toast.success("Post generated successfully!");
-        // Auto generate image right after post is generated
         await generateImage(data.post.image_idea);
       } else {
         toast.error(data.error || "Failed to generate post");
@@ -323,30 +326,27 @@ const generateImage = async (imageIdea: string) => {
                 </div>
               </div>
 
-              {/* IMAGE SECTION - replaces old text-only "Suggested Image Idea" */}
+              {/* IMAGE SECTION */}
               <div>
                 <p className="text-xs text-cyan-400 font-medium uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Image className="w-3 h-3" />
-                  Generated Image
+                  Visual Content
                 </p>
 
-                {/* Image idea text */}
                 <p className="text-xs text-muted-foreground italic mb-3">{generatedPost.image_idea}</p>
 
-                {/* Image display area */}
                 <div className="relative rounded-xl overflow-hidden border border-cyan-500/20 bg-background/30 min-h-[200px] flex items-center justify-center">
                   {imageLoading && (
                     <div className="flex flex-col items-center gap-3 p-8">
                       <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-                      <p className="text-sm text-muted-foreground">Generating image...</p>
-                      <p className="text-xs text-muted-foreground/60">This may take 10–20 seconds</p>
+                      <p className="text-sm text-muted-foreground">Finding the right image...</p>
                     </div>
                   )}
 
                   {!imageLoading && imageError && (
                     <div className="flex flex-col items-center gap-3 p-8">
                       <Image className="w-8 h-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">Image generation failed</p>
+                      <p className="text-sm text-muted-foreground">Could not load image</p>
                       <button
                         onClick={() => generateImage(generatedPost.image_idea)}
                         className="text-xs text-cyan-400 hover:text-cyan-300 underline"
@@ -360,7 +360,7 @@ const generateImage = async (imageIdea: string) => {
                     <div className="w-full">
                       <img
                         src={generatedImage}
-                        alt="AI generated awareness campaign visual"
+                        alt="Awareness campaign visual"
                         className="w-full rounded-xl object-cover"
                         onError={() => setImageError(true)}
                       />
@@ -368,7 +368,7 @@ const generateImage = async (imageIdea: string) => {
                         <button
                           onClick={() => generateImage(generatedPost.image_idea)}
                           className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 transition-all"
-                          title="Regenerate image"
+                          title="Refresh image"
                         >
                           <RefreshCw className="w-3 h-3 text-white" />
                         </button>
@@ -383,6 +383,19 @@ const generateImage = async (imageIdea: string) => {
                     </div>
                   )}
                 </div>
+
+                {/* Canva Button */}
+                {canvaUrl && (
+                  <a
+                    href={canvaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all text-sm font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    🎨 Customize this visual on Canva
+                  </a>
+                )}
               </div>
             </div>
           </motion.div>
